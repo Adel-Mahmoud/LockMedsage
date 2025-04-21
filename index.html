@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>LockMessage | تشفير وفك تشفير الرسائل</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      direction: rtl;
+      background: linear-gradient(to top left, #eef2f3, #ffffff);
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 30px 25px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h2 {
+      text-align: center;
+      color: #1e293b;
+      margin-bottom: 25px;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+      color: #374151;
+    }
+
+    textarea, input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 15px;
+      box-sizing: border-box;
+      transition: border 0.3s;
+    }
+
+    textarea:focus, input:focus {
+      border-color: #3b82f6;
+      outline: none;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .icon-btn {
+      padding: 10px 18px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background-color: #3b82f6;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background-color 0.3s;
+    }
+
+    .icon-btn:hover {
+      background-color: #2563eb;
+    }
+
+    .result {
+      background: #f3f4f6;
+      padding: 20px;
+      border-radius: 12px;
+      position: relative;
+      font-size: 15px;
+      word-break: break-word;
+      min-height: 60px;
+      color: #111827;
+    }
+
+    #copyBtn {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background-color: #10b981;
+    }
+
+    #copyBtn:hover {
+      background-color: #059669;
+    }
+
+    .toast {
+      position: fixed;
+      top: 25px;
+      left: 25px;
+      background-color: #10b981;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: none;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2><i class="fas fa-lock"></i> LockMessage | أداة التشفير</h2>
+
+    <label for="message">الرسالة:</label>
+    <textarea id="message" rows="4" placeholder="اكتب رسالتك هنا..."></textarea>
+
+    <label for="key">المفتاح السري:</label>
+    <input type="text" id="key" placeholder="اكتب المفتاح السري هنا...">
+
+    <div class="button-group">
+      <button class="icon-btn" onclick="encrypt()">
+        <i class="fas fa-lock"></i> تشفير
+      </button>
+      <button class="icon-btn" onclick="decrypt()">
+        <i class="fas fa-unlock-alt"></i> فك التشفير
+      </button>
+    </div>
+
+    <div class="result" id="resultBox">
+      <button class="icon-btn" id="copyBtn" onclick="copyResult()">
+        <i class="fas fa-copy"></i>
+      </button>
+      <div id="resultText"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">✅ تم نسخ النتيجة بنجاح</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <script>
+    function encrypt() {
+      const message = document.getElementById("message").value;
+      const key = document.getElementById("key").value;
+
+      if (!message || !key) return showToast("⚠️ أدخل الرسالة والمفتاح", "#ef4444");
+
+      const encrypted = CryptoJS.AES.encrypt(message, key).toString();
+      document.getElementById("resultText").innerText = encrypted;
+    }
+
+    function decrypt() {
+      const encryptedText = document.getElementById("message").value;
+      const key = document.getElementById("key").value;
+
+      if (!encryptedText || !key) return showToast("⚠️ أدخل النص المشفر والمفتاح", "#ef4444");
+
+      try {
+        const decrypted = CryptoJS.AES.decrypt(encryptedText, key).toString(CryptoJS.enc.Utf8);
+        document.getElementById("resultText").innerText = decrypted || "⚠️ المفتاح غير صحيح أو النص غير صالح";
+      } catch (e) {
+        document.getElementById("resultText").innerText = "⚠️ حصل خطأ أثناء فك التشفير";
+      }
+    }
+
+    function copyResult() {
+      const text = document.getElementById("resultText").innerText;
+      if (!text) return showToast("⚠️ لا يوجد نص لنسخه", "#ef4444");
+
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("✅ تم نسخ النتيجة بنجاح", "#10b981");
+      });
+    }
+
+    function showToast(message, color = "#10b981") {
+      const toast = document.getElementById("toast");
+      toast.innerText = message;
+      toast.style.backgroundColor = color;
+      toast.style.display = "block";
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 3000);
+    }
+  </script>
+
+<!--
+ By/ Adel Mahmoud 
+ Phone/ +201018646196
+-->
+</body>
+</html>
